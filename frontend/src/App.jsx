@@ -18,6 +18,11 @@ import Login from "./Pages/Login";
 import Dashboard from "./Pages/Dashboard";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import GuestRoute from "./Components/GuestRoute";
+import VerifyEmail from "./Pages/VerifyEmail";
+import Profile from "./Pages/Profile";
+import ListUsers from "./Pages/ListUser";
+import DetailUsers from "./Pages/DetailUser";
+import DashboardLayout from "./Pages/DashboardLayout";
 
 function AppRoutes() {
   const { loading } = useContext(AuthContext);
@@ -40,6 +45,7 @@ function AppRoutes() {
         <Route path="/Orders" element={<Orders />} />
         <Route path="/Placeorder" element={<Placeorder />} />
         <Route path="/Contact" element={<Contact />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         <Route path="/login" element={ <GuestRoute> <Login /> </GuestRoute>} />
         <Route path="/register" element={<GuestRoute> <Register /></GuestRoute>} />
@@ -51,10 +57,44 @@ function AppRoutes() {
           <Route path="/placeorder" element={<Placeorder />} />
         </Route>
 
-        {/* proteksi dashboard hanya ADMIN, SUPERADMIN, dan RESELLER */}
-        <Route element={<ProtectedRoute roles={["ADMIN", "SUPERADMIN", "RESELLER","KURIR"]} />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Route>
+        <Route element={<ProtectedRoute roles={["ADMIN", "SUPERADMIN", "RESELLER", "KURIR"]} />}>
+        <Route
+          path="/dashboard"
+          element={
+            <DashboardLayout>
+              <Dashboard />
+            </DashboardLayout>
+          }
+        />
+      </Route>
+      <Route element={<ProtectedRoute roles={["SUPERADMIN"]} />}>
+        <Route
+          path="/dashboard/users"
+          element={
+            <DashboardLayout>
+              <ListUsers />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/dashboard/users/:id"
+          element={
+            <DashboardLayout>
+              <DetailUsers />
+            </DashboardLayout>
+          }
+        />
+      </Route>
+      <Route element={<ProtectedRoute roles={["USER", "ADMIN", "SUPERADMIN", "RESELLER", "KURIR"]} />}>
+        <Route
+          path="/dashboard/profile"
+          element={
+            <DashboardLayout>
+              <Profile />
+            </DashboardLayout>
+          }
+        />
+      </Route> 
 
         <Route path="/unauthorized" element={<div className="p-4">Unauthorized</div>} />
         <Route path="*" element={<div className="p-4">Not Found</div>} />

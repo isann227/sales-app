@@ -1,23 +1,42 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const prisma = require("../prisma");
+const { sendVerificationEmail } = require("../services/emailService");
+
+ const verifyEmail = async (req, res) => {
+  const { token } = req.query;
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    await prisma.user.update({
+      where: { id: payload.userId },
+      data: { isVerified: true },
+    });
+    res.json({ message: "Email berhasil diverifikasi. Silakan login." });
+  } catch (err) {
+    res.status(400).json({ message: "Token verifikasi tidak valid atau kadaluarsa." });
+  }
+};
 
  const register = async (req, res) => {
   try {
     const { email, password, name } = req.body;
-
-    // cek kalau email sudah ada
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: "Email sudah terdaftar" });
     }
-
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { email, password: hashed, name }
+      data: { email, password: hashed, name, isVerified: false }
     });
 
-    res.status(201).json({ message: "Registrasi berhasil", user });
+    // Generate verification token
+    const verifyToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verifyToken}`;
+
+    // Kirim email verifikasi
+    await sendVerificationEmail({ to: email, name, verifyUrl });
+
+    res.status(201).json({ message: "Registrasi berhasil! Silakan cek email untuk verifikasi." });
   } catch (error) {
     console.error("Register error:", error);
     res.status(500).json({ message: "Terjadi kesalahan server" });
@@ -28,6 +47,11 @@ const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return res.status(401).json({ error: "Invalid credentials" });
+
+  // Tambahkan pengecekan isVerified
+  if (!user.isVerified) {
+    return res.status(403).json({ error: "Email belum diverifikasi. Silakan cek email Anda." });
+  }
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return res.status(401).json({ error: "Invalid credentials" });
@@ -52,7 +76,15 @@ const login = async (req, res) => {
     },
   });
 
-  res.json({ accessToken, refreshToken });
+  res.json({ 
+    accessToken, refreshToken, 
+    user: {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role, // field di Prisma adalah 'role'
+  }
+  });
 };
 
 // 🆕 Refresh token
@@ -86,21 +118,38 @@ const refresh = async (req, res) => {
 const logout = async (req, res) => {
   try {
     const { refreshToken } = req.body;
-
     if (!refreshToken) {
       return res.status(400).json({ message: "Refresh token diperlukan" });
     }
 
-    const token = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken }
+    // decode refreshToken untuk dapatkan userId
+    let payload;
+    try {
+      payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({ message: "Refresh token tidak valid" });
+    }
+
+    // cari semua refreshToken milik userId yang belum revoked
+    const tokens = await prisma.refreshToken.findMany({
+      where: { userId: payload.userId, revoked: false }
     });
 
-    if (!token) {
+    // bandingkan hash
+    let found = null;
+    for (const t of tokens) {
+      const match = await bcrypt.compare(refreshToken, t.tokenHash);
+      if (match) {
+        found = t;
+        break;
+      }
+    }
+    if (!found) {
       return res.status(404).json({ message: "Refresh token tidak ditemukan" });
     }
 
     await prisma.refreshToken.update({
-      where: { token: refreshToken },
+      where: { id: found.id },
       data: { revoked: true }
     });
 
@@ -111,4 +160,4 @@ const logout = async (req, res) => {
   }
 };
 
-module.exports = { register, login, refresh, logout };
+module.exports = { register, login, refresh, logout, verifyEmail };

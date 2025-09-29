@@ -35,12 +35,41 @@ const ShopContextProvider = ({ children }) => {
   fetchData();
 }, []);
 
+  // Fetch cart dari backend
+  const fetchCart = async () => {
+    try {
+      const { data } = await api.get("/cart");
+      // data berupa array, mapping ke objek agar FE tetap bisa baca
+      const cartObj = {};
+      data.forEach(item => {
+        if (!cartObj[item.productId]) cartObj[item.productId] = {};
+        cartObj[item.productId][item.size || "default"] = item.quantity;
+      });
+      setCartItems(cartObj);
+      return cartObj;
+    } catch (err) {
+      console.error("Gagal fetch cart:", err);
+      setCartItems({});
+      return {};
+    }
+  };
+
+  // Fetch orders dari backend
+  const fetchOrders = async () => {
+    try {
+      const { data } = await api.get("/orders");
+      return data;
+    } catch (err) {
+      console.error("Gagal fetch orders:", err);
+      return [];
+    }
+  };
+
   const Add_Cart = (itemID, itemSize) => {
     if (!Size) {
       toast.error("Sorry, choose the size first");
       return;
     }
-
     let CartData = structuredClone(cartItems);
     if (CartData[itemID]) {
       if (CartData[itemID][itemSize]) {
@@ -85,7 +114,9 @@ const ShopContextProvider = ({ children }) => {
     cartItems, Add_Cart, Size, setSize,
     search, setSearch,
     updateQuantity, get_Cart_Count, get_TotalCart,
-    navigate
+    navigate,
+    fetchCart,
+    fetchOrders
   };
 
   return (

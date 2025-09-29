@@ -22,6 +22,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -32,6 +33,7 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/reviews', reviewRoutes);
 // app.use('/api/company', companyRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'Sales App Backend' }));

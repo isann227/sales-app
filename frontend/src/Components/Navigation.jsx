@@ -13,7 +13,7 @@ import {
 const NAV_CONFIG = {
   SUPERADMIN: [
     { label: "Dashboard", path: "/dashboard", icon: <HomeIcon className="w-5 h-5" /> },
-    { label: "Customers", path: "/dashboard/customers", icon: <UsersIcon className="w-5 h-5" /> },
+    { label: "Customers", path: "/dashboard/users", icon: <UsersIcon className="w-5 h-5" /> },
     { label: "Orders", path: "/dashboard/orders", icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
     { label: "Settings", path: "/dashboard/settings", icon: <Cog6ToothIcon className="w-5 h-5" /> },
     { label: "Profile", path: "/dashboard/profile", icon: <UserCircleIcon className="w-5 h-5" /> },

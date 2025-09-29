@@ -6,6 +6,7 @@ async function main() {
   await prisma.wishlist.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
+  await prisma.refreshToken.deleteMany();
   await prisma.user.deleteMany();
   await prisma.product.deleteMany();
   console.log('All data deleted.');
