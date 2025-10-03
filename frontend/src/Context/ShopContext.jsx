@@ -1,4 +1,5 @@
 import React, { createContext, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../api/axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -15,25 +16,27 @@ const ShopContextProvider = ({ children }) => {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
-  // fetch produk dari backend
- useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const res = await api.get("/products");
-      // Mapping agar setiap produk punya field id
-      const productsWithId = res.data.map(item => ({
-        ...item,
-        id: item.id || item._id, // utamakan id, fallback ke _id
-        image: getImageUrl(item.image_url) // pakai helper
-      }));
-      setProducts(productsWithId);
-    } catch (err) {
-      console.error(err);
-      toast.error("Gagal ambil data produk");
+  const location = useLocation();
+  // fetch produk dari backend, hanya jika bukan di dashboard
+  useEffect(() => {
+    if (!location.pathname.startsWith("/dashboard")) {
+      const fetchData = async () => {
+        try {
+          const res = await api.get("/products");
+          const productsWithId = res.data.map(item => ({
+            ...item,
+            id: item.id || item._id,
+            image: getImageUrl(item.image_url)
+          }));
+          setProducts(productsWithId);
+        } catch (err) {
+          console.error(err);
+          toast.error("Gagal ambil data produk");
+        }
+      };
+      fetchData();
     }
-  };
-  fetchData();
-}, []);
+  }, [location.pathname]);
 
   // Fetch cart dari backend
   const fetchCart = async () => {

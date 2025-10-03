@@ -11,18 +11,22 @@ const getAllUsers = async (req, res) => {
 
 // List semua user (khusus super admin)
 const listUsers = async (req, res) => {
-  // Optional: cek role superadmin
   if (req.user.role !== "SUPERADMIN") return res.status(403).json({ message: "Forbidden" });
   const users = await prisma.user.findMany({
+    where: { isVerified: true },
     select: {
       id: true,
       name: true,
       email: true,
       role: true,
       isVerified: true,
+      mobile: true,
+      gender: true,
+      profileImageUrl: true,
+      lastLogin: true,
+      address: true,
       createdAt: true,
       updatedAt: true,
-      // tambahkan field lain jika ada
     }
   });
   res.json(users);
@@ -39,9 +43,17 @@ const userDetail = async (req, res) => {
       email: true,
       role: true,
       isVerified: true,
+      mobile: true,
+      gender: true,
+      province: true,   // pastikan ada
+      regency: true,    // pastikan ada
+      district: true,   // pastikan ada
+      village: true,    // pastikan ada
+      profileImageUrl: true,
+      lastLogin: true,
+      address: true,
       createdAt: true,
       updatedAt: true,
-      // field lain jika ada
     }
   });
   if (!user) return res.status(404).json({ message: "User not found" });
@@ -50,8 +62,25 @@ const userDetail = async (req, res) => {
 
 // Update profile (boleh untuk semua user, hanya dirinya sendiri)
 const updateProfile = async (req, res) => {
-  const { name, email, password } = req.body;
-  const data = { name, email };
+  const { name, email, password, gender, address, mobile, province, regency, district, village } = req.body;
+  const data = { name, email, address, mobile, province, regency, district, village };
+  if (["MALE", "FEMALE", "OTHER"].includes(gender)) {
+    data.gender = gender;
+  }
+  const fs = require('fs');
+  const path = require('path');
+  // Get previous user data
+  const prevUser = await prisma.user.findUnique({ where: { id: req.user.id }, select: { profileImageUrl: true } });
+  if (req.file) {
+    // Delete previous image if exists and is in /image/
+    if (prevUser && prevUser.profileImageUrl && prevUser.profileImageUrl.startsWith('/image/')) {
+      const prevImagePath = path.join(__dirname, '../../public', prevUser.profileImageUrl);
+      fs.unlink(prevImagePath, err => {}); // ignore error if file not found
+    }
+    data.profileImageUrl = `/image/${req.file.filename}`;
+  } else if (req.body.profileImageUrl) {
+    data.profileImageUrl = req.body.profileImageUrl;
+  }
   if (password) {
     const bcrypt = require("bcrypt");
     data.password = await bcrypt.hash(password, 10);
@@ -65,6 +94,14 @@ const updateProfile = async (req, res) => {
       email: true,
       role: true,
       isVerified: true,
+      gender: true,
+      address: true,
+      mobile: true,
+      province: true, 
+      regency: true,  
+      district: true, 
+      village: true,  
+      profileImageUrl: true,
       createdAt: true,
       updatedAt: true,
     }

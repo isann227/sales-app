@@ -9,7 +9,11 @@ const port = process.env.PORT || 3000;
 // middleware
 app.use(cors());
 app.use(express.json());
+// Custom morgan to skip /image requests
+// Serve static images before morgan logging so /image requests are not logged
+app.use('/image', express.static(require('path').join(__dirname, '../public/image')));
 app.use(morgan('dev'));
+app.use('/image', express.static(require('path').join(__dirname, '../public/image')));
 
 
 // routes
@@ -23,6 +27,7 @@ const wishlistRoutes = require('./routes/wishlistRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const wilayahRoutes = require('./routes/wilayahRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -34,6 +39,7 @@ app.use('/api/reviews', reviewRoutes);
 // app.use('/api/company', companyRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/wilayah", wilayahRoutes);
 
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'Sales App Backend' }));

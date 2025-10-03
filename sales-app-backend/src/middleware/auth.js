@@ -11,7 +11,7 @@ const auth = async (req, res, next) => {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Payload:", payload);
+    // console.log("Payload:", payload);
 
     // Pastikan pakai field yang konsisten (id atau userId sesuai saat login)
     const user = await prisma.user.findUnique({ where: { id: payload.id || payload.userId } });

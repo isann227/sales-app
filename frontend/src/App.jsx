@@ -22,6 +22,7 @@ import VerifyEmail from "./Pages/VerifyEmail";
 import Profile from "./Pages/Profile";
 import ListUsers from "./Pages/ListUser";
 import DetailUsers from "./Pages/DetailUser";
+import Settings from "./Pages/Settings";
 import DashboardLayout from "./Pages/DashboardLayout";
 
 function AppRoutes() {
@@ -50,8 +51,14 @@ function AppRoutes() {
         <Route path="/login" element={ <GuestRoute> <Login /> </GuestRoute>} />
         <Route path="/register" element={<GuestRoute> <Register /></GuestRoute>} />
 
+        {/* Route profile & settings khusus USER di luar dashboard */}
+        <Route element={<ProtectedRoute roles={["USER"]} />}> 
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+
         {/* proteksi role USER biar tetap di ecommerce */}
-        <Route element={<ProtectedRoute roles={["USER"]} />}>
+        <Route element={<ProtectedRoute roles={["USER"]} />}> 
           <Route path="/orders" element={<Orders />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/placeorder" element={<Placeorder />} />
@@ -94,7 +101,15 @@ function AppRoutes() {
             </DashboardLayout>
           }
         />
-      </Route> 
+        <Route
+          path="dashboard/settings"
+          element={
+            <DashboardLayout>
+              <Settings />
+            </DashboardLayout>
+          }
+        />
+      </Route>
 
         <Route path="/unauthorized" element={<div className="p-4">Unauthorized</div>} />
         <Route path="*" element={<div className="p-4">Not Found</div>} />

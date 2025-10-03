@@ -56,16 +56,22 @@ const login = async (req, res) => {
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return res.status(401).json({ error: "Invalid credentials" });
 
+  // Update lastLogin setelah login sukses
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLogin: new Date() }
+  });
+
   const accessToken = jwt.sign(
     { id: user.id },
     process.env.JWT_SECRET,
-    { expiresIn: "15m" } // access token cepat expired
+    { expiresIn: "15m" }
   );
 
   const refreshToken = jwt.sign(
     { userId: user.id },
     process.env.JWT_SECRET,
-    { expiresIn: "7d" } // refresh token lebih lama
+    { expiresIn: "7d" }
   );
 
   await prisma.refreshToken.create({
@@ -79,11 +85,11 @@ const login = async (req, res) => {
   res.json({ 
     accessToken, refreshToken, 
     user: {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role, // field di Prisma adalah 'role'
-  }
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    }
   });
 };
 

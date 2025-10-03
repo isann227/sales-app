@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { AuthContext } from "../Context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -9,11 +9,12 @@ import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon
 } from "@heroicons/react/24/outline";
+import { toast } from "react-toastify";
 
 const NAV_CONFIG = {
   SUPERADMIN: [
     { label: "Dashboard", path: "/dashboard", icon: <HomeIcon className="w-5 h-5" /> },
-    { label: "Customers", path: "/dashboard/users", icon: <UsersIcon className="w-5 h-5" /> },
+    { label: "Users", path: "/dashboard/users", icon: <UsersIcon className="w-5 h-5" /> },
     { label: "Orders", path: "/dashboard/orders", icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
     { label: "Settings", path: "/dashboard/settings", icon: <Cog6ToothIcon className="w-5 h-5" /> },
     { label: "Profile", path: "/dashboard/profile", icon: <UserCircleIcon className="w-5 h-5" /> },
@@ -27,11 +28,13 @@ const NAV_CONFIG = {
   RESELLER: [
     { label: "Dashboard", path: "/dashboard", icon: <HomeIcon className="w-5 h-5" /> },
     { label: "Orders", path: "/dashboard/orders", icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
+    { label: "Settings", path: "/dashboard/settings", icon: <Cog6ToothIcon className="w-5 h-5" /> },
     { label: "Profile", path: "/dashboard/profile", icon: <UserCircleIcon className="w-5 h-5" /> },
   ],
   KURIR: [
     { label: "Dashboard", path: "/dashboard", icon: <HomeIcon className="w-5 h-5" /> },
     { label: "Orders", path: "/dashboard/orders", icon: <ClipboardDocumentListIcon className="w-5 h-5" /> },
+    { label: "Settings", path: "/dashboard/settings", icon: <Cog6ToothIcon className="w-5 h-5" /> },
     { label: "Profile", path: "/dashboard/profile", icon: <UserCircleIcon className="w-5 h-5" /> },
   ],
 };
@@ -40,6 +43,7 @@ const Navigation = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   if (!user) return null;
 
@@ -47,11 +51,31 @@ const Navigation = () => {
 
   const handleLogout = async () => {
     await logout();
+    toast.success("Berhasil logout!");
     navigate("/login");
   };
 
   return (
     <aside className="w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col">
+      {/* Modal konfirmasi logout */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-80 text-center animate-fadeIn">
+            <h3 className="text-lg font-bold mb-4">Konfirmasi Logout</h3>
+            <p className="mb-6">Apakah Anda yakin ingin logout?</p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                onClick={() => setShowLogoutModal(false)}
+              >Batal</button>
+              <button
+                className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                onClick={handleLogout}
+              >Ya, Logout</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="p-6 text-xl font-bold text-indigo-700">Dashboard</div>
       <nav className="flex-1">
         <ul className="space-y-1 px-2">
@@ -71,7 +95,7 @@ const Navigation = () => {
         </ul>
       </nav>
       <button
-        onClick={handleLogout}
+        onClick={() => setShowLogoutModal(true)}
         className="flex items-center px-4 py-3 m-4 rounded-lg text-red-600 hover:bg-red-50 transition"
       >
         <ArrowRightOnRectangleIcon className="w-5 h-5" />

@@ -35,6 +35,10 @@ model User {
   password        String
   role            UserRole  @default(USER)
   address         String?
+  province        String?
+  regency         String?
+  district        String?
+  village         String?
   mobile          String?
   gender          Gender?
   profileImageUrl String?   @map("profile_image_url")
